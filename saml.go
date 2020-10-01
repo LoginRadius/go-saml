@@ -22,6 +22,9 @@ type IdentityProvider struct {
 	IDPCert              string
 	IDPKey               string
 	SPCert               string
+	IDPCertFilePath      string
+	IDPKeyFilePath       string
+	SPCertFilePath       string
 	Attributes           []map[string]string
 	SignatureAlgorithm   string
 	SignaturePrefix      string

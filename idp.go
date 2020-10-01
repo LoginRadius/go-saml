@@ -66,9 +66,21 @@ func (idp *IdentityProvider) NewSignedLogoutResponse() (string, error) {
 }
 
 func (idp *IdentityProvider) MetaDataResponse() (string, error) {
+	var idpCert string
+	if idp.IDPCertFilePath != "" {
+		// IDP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPCertFilePath)
+		if err != nil {
+			return "", errors.New("SAML Configuration: IDP Certificate file could not be read")
+		}
+		idpCert = util.GetRawCertificate(string(buf))
+	} else {
+		idpCert = util.GetRawCertificate(idp.IDPCert)
+	}
+
 	metadata := lib.GetIdpEntityDescriptor()
 	metadata.EntityId = idp.Issuer
-	metadata.IDPSSODescriptor.SigningKeyDescriptor.KeyInfo.X509Data.X509Certificate.Cert = util.GetRawCertificate(idp.IDPCert)
+	metadata.IDPSSODescriptor.SigningKeyDescriptor.KeyInfo.X509Data.X509Certificate.Cert = idpCert
 	if len(idp.SingleSignOnService) > 0 {
 		for i := 0; i < len(idp.SingleSignOnService); i++ {
 			metadata.IDPSSODescriptor.SingleSignOnService = append(metadata.IDPSSODescriptor.SingleSignOnService, lib.SingleSignOnService{
@@ -175,24 +187,50 @@ func (idp *IdentityProvider) ResponseHtml(signedXML string, requestType string) 
 }
 
 func (idp *IdentityProvider) validateIDPX509Certificate() error {
-	if idp.IDPCert == "" {
+	if idp.IDPCert == "" && idp.IDPCertFilePath == "" {
 		return errors.New("SAML Configuration: IDP Certificate is empty")
 	}
-	err := util.ValidateCertificatePem(idp.IDPCert)
-	if err != nil {
-		return err
+
+	if idp.IDPCertFilePath != "" {
+		// IDP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPCertFilePath)
+		if err != nil {
+			return errors.New("SAML Configuration: IDP Certificate file could not be read")
+		}
+		if err := util.ValidateCertificatePem(string(buf)); err != nil {
+			return err
+		}
+	} else {
+		// IDP Cert is provided by string.
+		if err := util.ValidateCertificatePem(idp.IDPCert); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
 func (idp *IdentityProvider) validateSPX509Certificate() error {
-	if idp.SPCert == "" {
+	if idp.SPCert == "" && idp.SPCertFilePath == "" {
 		return errors.New("SAML Configuration: SP Certificate is empty")
 	}
-	err := util.ValidateCertificatePem(idp.SPCert)
-	if err != nil {
-		return err
+
+	if idp.SPCertFilePath != "" {
+		// SP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.SPCertFilePath)
+		if err != nil {
+			return errors.New("SAML Configuration: SP Certificate file could not be read")
+		}
+		if err := util.ValidateCertificatePem(string(buf)); err != nil {
+			return err
+		}
+	} else {
+		// SP Cert is provided by string.
+		if err := util.ValidateCertificatePem(idp.SPCert); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -201,7 +239,18 @@ func (idp *IdentityProvider) rawIdpX509Certificate() error {
 	if err != nil {
 		return err
 	}
-	idp.x509IdpCertificate = util.GetRawCertificate(idp.IDPCert)
+
+	if idp.IDPCertFilePath != "" {
+		// IDP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPCertFilePath)
+		if err != nil {
+			return errors.New("SAML Configuration: IDP Certificate file could not be read")
+		}
+		idp.x509IdpCertificate = util.GetRawCertificate(string(buf))
+	} else {
+		idp.x509IdpCertificate = util.GetRawCertificate(idp.IDPCert)
+	}
+
 	return nil
 }
 
@@ -210,7 +259,18 @@ func (idp *IdentityProvider) rawSPX509Certificate() error {
 	if err != nil {
 		return err
 	}
-	idp.x509SpCertificate = util.GetRawCertificate(idp.SPCert)
+
+	if idp.SPCertFilePath != "" {
+		// SP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.SPCertFilePath)
+		if err != nil {
+			return errors.New("SAML Configuration: SP Certificate file could not be read")
+		}
+		idp.x509SpCertificate = util.GetRawCertificate(string(buf))
+	} else {
+		idp.x509SpCertificate = util.GetRawCertificate(idp.SPCert)
+	}
+
 	return nil
 }
 
@@ -233,14 +293,30 @@ func (idp *IdentityProvider) parseSpX509Certificate() error {
 }
 
 func (idp *IdentityProvider) parsePrivateKey() error {
-	if idp.IDPKey == "" {
+	if idp.IDPKey == "" && idp.IDPKeyFilePath == "" {
 		return errors.New("SAML Configuration: IDP Private Key is empty")
 	}
-	privateKey, err := util.ParseRsaPrivateKeyPem(idp.IDPKey)
-	if err != nil {
-		return err
+
+	if idp.IDPKeyFilePath != "" {
+		// IDP Private Key is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPKeyFilePath)
+		if err != nil {
+			return errors.New("SAML Configuration: IDP Private Key file could not be read")
+		}
+		privateKey, err := util.ParseRsaPrivateKeyPem(string(buf))
+		if err != nil {
+			return err
+		}
+		idp.idpPrivateKey = privateKey
+	} else {
+		// IDP Private Key is provided by string.
+		privateKey, err := util.ParseRsaPrivateKeyPem(idp.IDPKey)
+		if err != nil {
+			return err
+		}
+		idp.idpPrivateKey = privateKey
 	}
-	idp.idpPrivateKey = privateKey
+
 	return nil
 }
 
