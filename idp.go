@@ -25,6 +25,8 @@ func (idp *IdentityProvider) NewSignedLoginResponse() (string, error) {
 	}
 	response := lib.NewResponse()
 	response.SetIdpCertificate(idp.x509IdpCertificate)
+	resposne.SetSignatureAlgorithm(idp.signatureAlgorithm())
+	resposne.SetDigestAlgorithm(idp.digestAlgorithm())
 	response.SetIssuer(idp.Issuer)
 	response.SetDestination(idp.ACSLocation)
 	response.SetNameId(idp.NameIdentifierFormat, idp.NameIdentifier)
@@ -58,6 +60,8 @@ func (idp *IdentityProvider) NewSignedLogoutResponse() (string, error) {
 	if idp.samlRequestParam != nil {
 		response.InResponseTo = idp.samlRequestParam.LogoutRequest.ID
 	}
+	resposne.SetSignatureAlgorithm(idp.signatureAlgorithm())
+	resposne.SetDigestAlgorithm(idp.digestAlgorithm())
 	signedXml, err := response.SignedXml(idp.idpPrivateKey)
 	if err != nil {
 		return "", err
@@ -303,6 +307,22 @@ func (idp *IdentityProvider) validate() error {
 		}
 	}
 	return nil
+}
+
+func (idp *IdentityProvider) signatureAlgorithm() string {
+	if idp.SignatureAlgorithm == "" {
+		return SignatureAlgorithmRSASHA256
+	}
+
+	return idp.SignatureAlgorithm
+}
+
+func (idp *IdentityProvider) digestAlgorithm() string {
+	if idp.DigestAlgorithm == "" {
+		return DigestAlgorithmSHA256
+	}
+
+	return idp.DigestAlgorithm
 }
 
 func prepareSamlRequestParam(method string, query url.Values, payload url.Values, requestType string) (*SamlRequestParam, error) {

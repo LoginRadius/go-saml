@@ -69,7 +69,8 @@ func NewResponse() *Response {
 						XMLName: xml.Name{
 							Local: "ds:SignatureMethod",
 						},
-						Algorithm: "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+
+						Algorithm: "", // populated by SetSignatureAlgorithm
 					},
 					SamlsigReference: SamlsigReference{
 						XMLName: xml.Name{
@@ -96,7 +97,7 @@ func NewResponse() *Response {
 							XMLName: xml.Name{
 								Local: "ds:DigestMethod",
 							},
-							Algorithm: "http://www.w3.org/2001/04/xmlenc#sha256",
+							Algorithm: "", // populated by SetDigestAlgorithm
 						},
 						DigestValue: DigestValue{
 							XMLName: xml.Name{
@@ -258,6 +259,14 @@ func (r *Response) SetSessionIndex(sessionIndex string) {
 func (r *Response) SetInResponseTo(inResponseTo string) {
 	r.InResponseTo = inResponseTo
 	r.Assertion.Subject.SubjectConfirmation.SubjectConfirmationData.InResponseTo = inResponseTo
+}
+
+func (r *Response) SetSignatureAlgorithm(alg string) {
+	r.Assertion.Signature.SignedInfo.SignatureMethod.Algorithm = alg
+}
+
+func (r *Response) SetDigestAlgorithm(alg string) {
+	r.Assertion.Signature.SignedInfo.SamlsigReference.DigestMethod.Algorithm = alg
 }
 
 func (r *Response) SignedXml(idpPrivateKey interface{}) (string, error) {
