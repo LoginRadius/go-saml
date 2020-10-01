@@ -58,7 +58,7 @@ func NewLogoutResponse() *LogoutResponse {
 					XMLName: xml.Name{
 						Local: "ds:SignatureMethod",
 					},
-					Algorithm: "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+					Algorithm: "", // populated by SetSignatureAlgorithm
 				},
 				SamlsigReference: SamlsigReference{
 					XMLName: xml.Name{
@@ -85,7 +85,7 @@ func NewLogoutResponse() *LogoutResponse {
 						XMLName: xml.Name{
 							Local: "ds:DigestMethod",
 						},
-						Algorithm: "http://www.w3.org/2001/04/xmlenc#sha256",
+						Algorithm: "", // populated by SetDigestAlgorithm
 					},
 					DigestValue: DigestValue{
 						XMLName: xml.Name{
@@ -140,6 +140,14 @@ func (r *LogoutResponse) String() (string, error) {
 
 func (r *LogoutResponse) SetInResponseTo(inResponseTo string) {
 	r.InResponseTo = inResponseTo
+}
+
+func (r *LogoutResponse) SetSignatureAlgorithm(alg string) {
+	r.Signature.SignedInfo.SignatureMethod.Algorithm = alg
+}
+
+func (r *LogoutResponse) SetDigestAlgorithm(alg string) {
+	r.Signature.SignedInfo.SamlsigReference.DigestMethod.Algorithm = alg
 }
 
 func (r *LogoutResponse) SignedXml(idpPrivateKey interface{}) (string, error) {
