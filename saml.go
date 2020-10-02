@@ -15,6 +15,18 @@ const (
 	AttributeFormatUri         = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
 )
 
+// Supported signature algorithms for responses
+const (
+	SignatureAlgorithmRSASHA1   = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+	SignatureAlgorithmRSASHA256 = "http://www.w3.org/2001/04/xmldsig-more#sha256"
+)
+
+// Supported digest algorithms for responses
+const (
+	DigestAlgorithmSHA1   = "http://www.w3.org/2000/09/xmldsig#sha1"
+	DigestAlgorithmSHA256 = "http://www.w3.org/2001/04/xmlenc#sha256"
+)
+
 type IdentityProvider struct {
 	IsIdpInitiated       bool
 	Issuer               string
@@ -26,9 +38,9 @@ type IdentityProvider struct {
 	IDPKeyFilePath       string
 	SPCertFilePath       string
 	Attributes           []map[string]string
-	SignatureAlgorithm   string
+	SignatureAlgorithm   string // RSA-SHA256 is the default
 	SignaturePrefix      string
-	DigestAlgorithm      string
+	DigestAlgorithm      string // SHA256 is the default
 	LifetimeInSeconds    int64
 	NameIdentifier       string
 	NameIdentifierFormat string
