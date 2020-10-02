@@ -25,8 +25,8 @@ func (idp *IdentityProvider) NewSignedLoginResponse() (string, *Reject) {
 	}
 	response := lib.NewResponse()
 	response.SetIdpCertificate(idp.x509IdpCertificate)
-	resposne.SetSignatureAlgorithm(idp.signatureAlgorithm())
-	resposne.SetDigestAlgorithm(idp.digestAlgorithm())
+	response.SetSignatureAlgorithm(idp.signatureAlgorithm())
+	response.SetDigestAlgorithm(idp.digestAlgorithm())
 	response.SetIssuer(idp.Issuer)
 	response.SetDestination(idp.ACSLocation)
 	response.SetNameId(idp.NameIdentifierFormat, idp.NameIdentifier)
@@ -60,8 +60,8 @@ func (idp *IdentityProvider) NewSignedLogoutResponse() (string, *Reject) {
 	if idp.samlRequestParam != nil {
 		response.InResponseTo = idp.samlRequestParam.LogoutRequest.ID
 	}
-	resposne.SetSignatureAlgorithm(idp.signatureAlgorithm())
-	resposne.SetDigestAlgorithm(idp.digestAlgorithm())
+	response.SetSignatureAlgorithm(idp.signatureAlgorithm())
+	response.SetDigestAlgorithm(idp.digestAlgorithm())
 	signedXml, err := response.SignedXml(idp.idpPrivateKey)
 	if err != nil {
 		return "", &Reject{err, "SIGNED_XML_ERROR"}
@@ -70,9 +70,21 @@ func (idp *IdentityProvider) NewSignedLogoutResponse() (string, *Reject) {
 }
 
 func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
+	var idpCert string
+	if idp.IDPCertFilePath != "" {
+		// IDP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPCertFilePath)
+		if err != nil {
+			return "", &Reject{err, "SAML Configuration: IDP Certificate file could not be read"}
+		}
+		idpCert = util.GetRawCertificate(string(buf))
+	} else {
+		idpCert = util.GetRawCertificate(idp.IDPCert)
+	}
+
 	metadata := lib.GetIdpEntityDescriptor()
 	metadata.EntityId = idp.Issuer
-	metadata.IDPSSODescriptor.SigningKeyDescriptor.KeyInfo.X509Data.X509Certificate.Cert = util.GetRawCertificate(idp.IDPCert)
+	metadata.IDPSSODescriptor.SigningKeyDescriptor.KeyInfo.X509Data.X509Certificate.Cert = idpCert
 	if len(idp.SingleSignOnService) > 0 {
 		for i := 0; i < len(idp.SingleSignOnService); i++ {
 			metadata.IDPSSODescriptor.SingleSignOnService = append(metadata.IDPSSODescriptor.SingleSignOnService, lib.SingleSignOnService{
@@ -99,8 +111,7 @@ func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
 	}
 	b, err := xml.MarshalIndent(metadata, "", "    ")
 	if err != nil {
-		return "", &Reject{err, "XML_ENCODE_ERROR",
-		}
+		return "", &Reject{err, "XML_ENCODE_ERROR"}
 	}
 	newMetadata := fmt.Sprintf("<?xml version='1.0' encoding='UTF-8'?>\n%s", b)
 	return string(newMetadata), nil
@@ -180,24 +191,50 @@ func (idp *IdentityProvider) ResponseHtml(signedXML string, requestType string) 
 }
 
 func (idp *IdentityProvider) validateIDPX509Certificate() *Reject {
-	if idp.IDPCert == "" {
+	if idp.IDPCert == "" && idp.IDPCertFilePath == "" {
 		return &Reject{errors.New("SAML Configuration: IDP Certificate is empty"), "EMPTY_IDP_CERTIFICATE"}
 	}
-	err := util.ValidateCertificatePem(idp.IDPCert)
-	if err != nil {
-		return &Reject{err, "INVALID_CERTIFICATE_PEM"}
+
+	if idp.IDPCertFilePath != "" {
+		// IDP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPCertFilePath)
+		if err != nil {
+			return &Reject{errors.New("SAML Configuration: IDP Certificate is empty"), "EMPTY_IDP_CERTIFICATE"}
+		}
+		if err := util.ValidateCertificatePem(string(buf)); err != nil {
+			return &Reject{err, "INVALID_CERTIFICATE_PEM"}
+		}
+	} else {
+		// IDP Cert is provided by string.
+		if err := util.ValidateCertificatePem(idp.IDPCert); err != nil {
+			return &Reject{err, "INVALID_CERTIFICATE_PEM"}
+		}
 	}
+
 	return nil
 }
 
 func (idp *IdentityProvider) validateSPX509Certificate() *Reject {
-	if idp.SPCert == "" {
+	if idp.SPCert == "" && idp.SPCertFilePath == "" {
 		return &Reject{errors.New("SAML Configuration: SP Certificate is empty"), "EMPTY_IDP_CERTIFICATE"}
 	}
-	err := util.ValidateCertificatePem(idp.SPCert)
-	if err != nil {
-		return &Reject{err, "INVALID_CERTIFICATE_PEM"}
+
+	if idp.SPCertFilePath != "" {
+		// SP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.SPCertFilePath)
+		if err != nil {
+			return &Reject{err, "INVALID_CERTIFICATE_PEM_FILE_PATH"}
+		}
+		if err := util.ValidateCertificatePem(string(buf)); err != nil {
+			return &Reject{err, "INVALID_CERTIFICATE_PEM"}
+		}
+	} else {
+		// SP Cert is provided by string.
+		if err := util.ValidateCertificatePem(idp.SPCert); err != nil {
+			return &Reject{err, "INVALID_CERTIFICATE_PEM"}
+		}
 	}
+
 	return nil
 }
 
@@ -206,7 +243,18 @@ func (idp *IdentityProvider) rawIdpX509Certificate() *Reject {
 	if err != nil {
 		return err
 	}
-	idp.x509IdpCertificate = util.GetRawCertificate(idp.IDPCert)
+
+	if idp.IDPCertFilePath != "" {
+		// IDP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPCertFilePath)
+		if err != nil {
+			return &Reject{err, "INVALID_CERTIFICATE_PEM_FILE_PATH"}
+		}
+		idp.x509IdpCertificate = util.GetRawCertificate(string(buf))
+	} else {
+		idp.x509IdpCertificate = util.GetRawCertificate(idp.IDPCert)
+	}
+
 	return nil
 }
 
@@ -215,7 +263,18 @@ func (idp *IdentityProvider) rawSPX509Certificate() *Reject {
 	if err != nil {
 		return err
 	}
-	idp.x509SpCertificate = util.GetRawCertificate(idp.SPCert)
+
+	if idp.SPCertFilePath != "" {
+		// SP Cert is provided by file path.
+		buf, err := ioutil.ReadFile(idp.SPCertFilePath)
+		if err != nil {
+			return &Reject{err, "INVALID_CERTIFICATE_PEM_FILE_PATH"}
+		}
+		idp.x509SpCertificate = util.GetRawCertificate(string(buf))
+	} else {
+		idp.x509SpCertificate = util.GetRawCertificate(idp.SPCert)
+	}
+
 	return nil
 }
 
@@ -238,7 +297,7 @@ func (idp *IdentityProvider) parseSpX509Certificate() *Reject {
 }
 
 func (idp *IdentityProvider) parsePrivateKey() *Reject {
-	if idp.IDPKey == "" {
+	if idp.IDPKey == "" && idp.IDPKeyFilePath == "" {
 		return &Reject{errors.New("SAML Configuration: IDP Private Key is empty"), "EMPTY_IDP_PRIVATE_KEY"}
 	}
 	privateKey, err := util.ParseRsaPrivateKeyPem(idp.IDPKey)
@@ -246,6 +305,27 @@ func (idp *IdentityProvider) parsePrivateKey() *Reject {
 		return &Reject{err, "PARSE_PRIVATE_KEY_ERROR"}
 	}
 	idp.idpPrivateKey = privateKey
+
+	if idp.IDPKeyFilePath != "" {
+		// IDP Private Key is provided by file path.
+		buf, err := ioutil.ReadFile(idp.IDPKeyFilePath)
+		if err != nil {
+			return &Reject{err, "INVALID_PRIVATE_KEY_FILE_PATH"}
+		}
+		privateKey, err := util.ParseRsaPrivateKeyPem(string(buf))
+		if err != nil {
+			return &Reject{err, "PARSE_PRIVATE_KEY_ERROR"}
+		}
+		idp.idpPrivateKey = privateKey
+	} else {
+		// IDP Private Key is provided by string.
+		privateKey, err := util.ParseRsaPrivateKeyPem(idp.IDPKey)
+		if err != nil {
+			return &Reject{err, "PARSE_PRIVATE_KEY_ERROR"}
+		}
+		idp.idpPrivateKey = privateKey
+	}
+
 	return nil
 }
 
@@ -272,24 +352,24 @@ func (idp *IdentityProvider) validate() *Reject {
 	}
 
 	if idp.ACSBinging == "" {
-		return &Reject{errors.New("SAML Configuration: ACSBinging is empty"),"SAML_CONFIG_ACSBINGING_EMPTY"}
+		return &Reject{errors.New("SAML Configuration: ACSBinging is empty"), "SAML_CONFIG_ACSBINGING_EMPTY"}
 	}
 
 	if idp.ACSBinging != "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" {
-		return &Reject{errors.New("SAML Configuration: ACSBinging is invalid"),"SAML_CONFIG_ACSBINGING_EMPTY"}
+		return &Reject{errors.New("SAML Configuration: ACSBinging is invalid"), "SAML_CONFIG_ACSBINGING_EMPTY"}
 	}
 
 	if idp.NameIdentifierFormat == "" {
-		return &Reject{errors.New("SAML Configuration: NameID Format is empty"),"SAML_CONFIG_NAMEID_FORMAT_EMPTY"}
+		return &Reject{errors.New("SAML Configuration: NameID Format is empty"), "SAML_CONFIG_NAMEID_FORMAT_EMPTY"}
 	}
 	if idp.NameIdentifier == "" {
-		return &Reject{errors.New("SAML Configuration: NameID value is empty"),"SAML_CONFIG_NAMEID_VALUE_EMPTY"}
+		return &Reject{errors.New("SAML Configuration: NameID value is empty"), "SAML_CONFIG_NAMEID_VALUE_EMPTY"}
 	}
 	if idp.SessionIndex == "" {
-		return &Reject{errors.New("SAML Configuration: SessionIndex is empty"),"SAML_CONFIG_SESSIONINDEX_EMPTY"}
+		return &Reject{errors.New("SAML Configuration: SessionIndex is empty"), "SAML_CONFIG_SESSIONINDEX_EMPTY"}
 	}
 	if len(idp.Audiences) == 0 {
-		return &Reject{errors.New("SAML Configuration: Audience is empty"),"SAML_CONFIG_AUDIENCE_EMPTY"}
+		return &Reject{errors.New("SAML Configuration: Audience is empty"), "SAML_CONFIG_AUDIENCE_EMPTY"}
 	}
 	if len(idp.Attributes) > 0 {
 		for _, attr := range idp.Attributes {
@@ -297,13 +377,13 @@ func (idp *IdentityProvider) validate() *Reject {
 			attrFormat, attrFormatOk := attr["Format"]
 			_, attrValueOk := attr["Value"]
 			if !(attrNameOk && attrName != "") {
-				return &Reject{errors.New("SAML Configuration: Attributes Name is not defined or empty"),"SAML_CONFIG_NAME_UNDEFINED"}
+				return &Reject{errors.New("SAML Configuration: Attributes Name is not defined or empty"), "SAML_CONFIG_NAME_UNDEFINED"}
 			}
 			if !(attrFormatOk && attrFormat != "") {
-				return &Reject{errors.New("SAML Configuration: Attributes Format is not defined or empty"),"SAML_CONFIG_FORMAT_UNDEFINED"}
+				return &Reject{errors.New("SAML Configuration: Attributes Format is not defined or empty"), "SAML_CONFIG_FORMAT_UNDEFINED"}
 			}
 			if !(attrValueOk) {
-				return &Reject{errors.New("SAML Configuration: Attributes Value is not defined"),"SAML_CONFIG_VALUE_UNDEFINED"}
+				return &Reject{errors.New("SAML Configuration: Attributes Value is not defined"), "SAML_CONFIG_VALUE_UNDEFINED"}
 			}
 		}
 	}
