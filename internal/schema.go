@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-var signaturePrefix = "ds"
-
 type AuthnRequest struct {
 	XMLName                        xml.Name
 	SAMLP                          string                `xml:"xmlns:samlp,attr"`
@@ -23,7 +21,6 @@ type AuthnRequest struct {
 	NameIDPolicy                   NameIDPolicy          `xml:"NameIDPolicy"`
 	RequestedAuthnContext          RequestedAuthnContext `xml:"RequestedAuthnContext"`
 	Signature                      *Signature            `xml:"Signature,omitempty"`
-	originalString                 string
 }
 
 type Issuer struct {
@@ -219,7 +216,6 @@ type Response struct {
 	Issuer         Issuer    `xml:"Issuer"`
 	Status         Status    `xml:"Status"`
 	Assertion      Assertion `xml:"Assertion"`
-	originalString string
 }
 
 type Assertion struct {
