@@ -23,6 +23,9 @@ type AuthnRequest struct {
 	NameIDPolicy                   NameIDPolicy          `xml:"NameIDPolicy"`
 	RequestedAuthnContext          RequestedAuthnContext `xml:"RequestedAuthnContext"`
 	Signature                      *Signature            `xml:"Signature,omitempty"`
+	ForceAuthn                     string                `xml:"ForceAuthn"`
+	IsPassive                      string                `xml:"IsPassive"`
+	ProviderName                   string                `xml:"ProviderName"`
 	originalString                 string
 }
 
