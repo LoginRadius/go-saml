@@ -117,7 +117,7 @@ func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
 	return string(newMetadata), nil
 }
 
-func (idp *IdentityProvider) ValidateAuthnRequest(method string, query url.Values, payload url.Values) (*AuthReq, *Reject) {
+func (idp *IdentityProvider) ValidateAuthnRequest(method string, query url.Values, payload url.Values) (*AuthnReq, *Reject) {
 	samlRequestParam, err := prepareSamlRequestParam(method, query, payload, "AuthnRequest")
 	if err != nil {
 		return nil, &Reject{err, "SAML_REQUEST_NOT_VALID"}
@@ -465,11 +465,11 @@ func prepareSamlRequestParam(method string, query url.Values, payload url.Values
 	return samlRequestParam, nil
 }
 
-func (idp *IdentityProvider) getAuthnRequest(param *SamlRequestParam) *AuthReq {
+func (idp *IdentityProvider) getAuthnRequest(param *SamlRequestParam) *AuthnReq {
 
 	authReq := param.AuthnRequest
 
-	return &AuthReq{
+	return &AuthnReq{
 		ID:           authReq.ID,
 		ForceAuthn:   authReq.ForceAuthn,
 		IsPassive:    authReq.IsPassive,

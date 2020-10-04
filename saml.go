@@ -67,7 +67,7 @@ type Reject struct {
 	Reason string
 }
 
-type AuthReq struct {
+type AuthnReq struct {
 	ID           string
 	ForceAuthn   string
 	IsPassive    string
