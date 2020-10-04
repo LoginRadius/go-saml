@@ -117,20 +117,20 @@ func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
 	return string(newMetadata), nil
 }
 
-func (idp *IdentityProvider) ValidateAuthnRequest(method string, query url.Values, payload url.Values) *Reject {
+func (idp *IdentityProvider) ValidateAuthnRequest(method string, query url.Values, payload url.Values) (interface{}, *Reject) {
 	samlRequestParam, err := prepareSamlRequestParam(method, query, payload, "AuthnRequest")
 	if err != nil {
-		return &Reject{err, "SAML_REQUEST_NOT_VALID"}
+		return nil, &Reject{err, "SAML_REQUEST_NOT_VALID"}
 	}
 	if err = samlRequestParam.CheckSignature(idp); err != nil {
-		return &Reject{err, "SAML_SINGING_CERTIFICATE_MISMATCH"}
+		return nil, &Reject{err, "SAML_SINGING_CERTIFICATE_MISMATCH"}
 	}
 	if err = samlRequestParam.AuthnRequest.Validate(); err != nil {
-		return &Reject{err, "SAML_REQUEST_NOT_VALID"}
+		return nil, &Reject{err, "SAML_REQUEST_NOT_VALID"}
 	}
 	idp.RelayState = samlRequestParam.RelayState
 	idp.samlRequestParam = samlRequestParam
-	return nil
+	return samlRequestParam.AuthnRequest, nil
 }
 
 func (idp *IdentityProvider) ValidateLogoutRequest(method string, query url.Values, payload url.Values) *Reject {

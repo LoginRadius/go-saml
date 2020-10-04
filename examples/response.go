@@ -31,7 +31,7 @@ func LoginResponseExample() {
 
 	//This validate the AuthnRequest and set parse value in the idp instance,
 	//When NewSignedLoginResponse called, InResponseTo property added from the parsed AuthnRequest
-	validationError := idp.ValidateAuthnRequest("POST", url.Values{}, utitlity.GetSampleAuthnRequest())
+	_, validationError := idp.ValidateAuthnRequest("POST", url.Values{}, utitlity.GetSampleAuthnRequest())
 	if validationError != nil {
 		fmt.Println(validationError)
 	}
