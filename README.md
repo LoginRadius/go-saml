@@ -67,7 +67,7 @@ if err !=nil {
 ### Validate and Parse Logout Request
 ```
 //This validate the AuthnRequest and set parsed value in the idp instance, 
-//that used in Generating the SAML Logout Response with InResponseTo property
+//that is used in Generating the SAML Logout Response with InResponseTo property
 
 //Get Querystring and Payload values from request with url.Value{} type
 validationError := idp.ValidateLogoutRequest(method"POST",query url.Values,payload url.Values);
@@ -122,7 +122,7 @@ xml, xmlerr :=  idp.MetaDataResponse()
 Please see [examples](examples) for how to use the library to be an identity provider.
 
 ## Contributing
-Would love any contributions you, having including better documentation, tests, or more robust functionality. Please follow the [contributing guide](CONTRIBUTING.md)
+Would love any contribution by you, including better documentation, tests or more robust functionality. Please follow the [contributing guide](CONTRIBUTING.md)
 
 ## License
 [MIT](LICENSE)
