@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
-	"github.com/LoginRadius/go-saml/internal"
+	lib "github.com/LoginRadius/go-saml/internal"
 	"github.com/LoginRadius/go-saml/util"
 	"github.com/ma314smith/signedxml"
 	"net/url"
@@ -34,8 +34,8 @@ type SamlRequestParam struct {
 	RelayState    string
 	SigAlg        string
 	Signature     string
-	AuthnRequest  *internal.AuthnRequest
-	LogoutRequest *internal.LogoutRequest
+	AuthnRequest  *lib.AuthnRequest
+	LogoutRequest *lib.LogoutRequest
 }
 
 func (s *SamlRequestParam) GetOctetString() string {
@@ -52,7 +52,7 @@ func (s *SamlRequestParam) GetOctetString() string {
 }
 
 func (s *SamlRequestParam) ParseAuthnRequest() error {
-	var authnRequest internal.AuthnRequest
+	var authnRequest lib.AuthnRequest
 	if err := xml.Unmarshal(s.RequestBuffer, &authnRequest); err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (s *SamlRequestParam) ParseAuthnRequest() error {
 }
 
 func (s *SamlRequestParam) ParseLogoutRequest() error {
-	var logoutRequest internal.LogoutRequest
+	var logoutRequest lib.LogoutRequest
 	if err := xml.Unmarshal(s.RequestBuffer, &logoutRequest); err != nil {
 		return err
 	}

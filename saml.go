@@ -66,3 +66,10 @@ type Reject struct {
 	Error  error
 	Reason string
 }
+
+type AuthnReq struct {
+	ID           string
+	ForceAuthn   string
+	IsPassive    string
+	ProviderName string
+}
