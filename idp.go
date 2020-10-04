@@ -409,8 +409,8 @@ func (idp *IdentityProvider) digestAlgorithm() string {
 	return idp.DigestAlgorithm
 }
 
-func prepareSamlRequestParam(method string, query url.Values, payload url.Values, requestType string) (*lib.SamlRequestParam, error) {
-	samlRequestParam := &lib.SamlRequestParam{Method: method}
+func prepareSamlRequestParam(method string, query url.Values, payload url.Values, requestType string) (*SamlRequestParam, error) {
+	samlRequestParam := &SamlRequestParam{Method: method}
 	switch method {
 	case "GET":
 		samlRequest := query.Get("SAMLRequest")
@@ -465,7 +465,7 @@ func prepareSamlRequestParam(method string, query url.Values, payload url.Values
 	return samlRequestParam, nil
 }
 
-func (idp *IdentityProvider) getAuthnRequest(param *lib.SamlRequestParam) *AuthReq {
+func (idp *IdentityProvider) getAuthnRequest(param *SamlRequestParam) *AuthReq {
 
 	authReq := param.AuthnRequest
 
