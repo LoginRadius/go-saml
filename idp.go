@@ -117,7 +117,7 @@ func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
 	return string(newMetadata), nil
 }
 
-func (idp *IdentityProvider) ValidateAuthnRequest(method string, query url.Values, payload url.Values) (interface{}, *Reject) {
+func (idp *IdentityProvider) ValidateAuthnRequest(method string, query url.Values, payload url.Values) (*AuthReq, *Reject) {
 	samlRequestParam, err := prepareSamlRequestParam(method, query, payload, "AuthnRequest")
 	if err != nil {
 		return nil, &Reject{err, "SAML_REQUEST_NOT_VALID"}
@@ -130,7 +130,10 @@ func (idp *IdentityProvider) ValidateAuthnRequest(method string, query url.Value
 	}
 	idp.RelayState = samlRequestParam.RelayState
 	idp.samlRequestParam = samlRequestParam
-	return samlRequestParam.AuthnRequest, nil
+
+	authnRequest := idp.getAuthnRequest(samlRequestParam)
+
+	return authnRequest, nil
 }
 
 func (idp *IdentityProvider) ValidateLogoutRequest(method string, query url.Values, payload url.Values) *Reject {
@@ -406,8 +409,8 @@ func (idp *IdentityProvider) digestAlgorithm() string {
 	return idp.DigestAlgorithm
 }
 
-func prepareSamlRequestParam(method string, query url.Values, payload url.Values, requestType string) (*SamlRequestParam, error) {
-	samlRequestParam := &SamlRequestParam{Method: method}
+func prepareSamlRequestParam(method string, query url.Values, payload url.Values, requestType string) (*lib.SamlRequestParam, error) {
+	samlRequestParam := &lib.SamlRequestParam{Method: method}
 	switch method {
 	case "GET":
 		samlRequest := query.Get("SAMLRequest")
@@ -460,4 +463,16 @@ func prepareSamlRequestParam(method string, query url.Values, payload url.Values
 		}
 	}
 	return samlRequestParam, nil
+}
+
+func (idp *IdentityProvider) getAuthnRequest(param *lib.SamlRequestParam) *AuthReq {
+
+	authReq := param.AuthnRequest
+
+	return &AuthReq{
+		ID:           authReq.ID,
+		ForceAuthn:   authReq.ForceAuthn,
+		IsPassive:    authReq.IsPassive,
+		ProviderName: authReq.ProviderName,
+	}
 }

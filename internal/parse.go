@@ -1,11 +1,11 @@
-package saml
+package internal
 
 import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
-	"github.com/LoginRadius/go-saml/internal"
+	"github.com/LoginRadius/go-saml"
 	"github.com/LoginRadius/go-saml/util"
 	"github.com/ma314smith/signedxml"
 	"net/url"
@@ -34,8 +34,8 @@ type SamlRequestParam struct {
 	RelayState    string
 	SigAlg        string
 	Signature     string
-	AuthnRequest  *internal.AuthnRequest
-	LogoutRequest *internal.LogoutRequest
+	AuthnRequest  *AuthnRequest
+	LogoutRequest *LogoutRequest
 }
 
 func (s *SamlRequestParam) GetOctetString() string {
@@ -52,7 +52,7 @@ func (s *SamlRequestParam) GetOctetString() string {
 }
 
 func (s *SamlRequestParam) ParseAuthnRequest() error {
-	var authnRequest internal.AuthnRequest
+	var authnRequest AuthnRequest
 	if err := xml.Unmarshal(s.RequestBuffer, &authnRequest); err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (s *SamlRequestParam) ParseAuthnRequest() error {
 }
 
 func (s *SamlRequestParam) ParseLogoutRequest() error {
-	var logoutRequest internal.LogoutRequest
+	var logoutRequest LogoutRequest
 	if err := xml.Unmarshal(s.RequestBuffer, &logoutRequest); err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (s *SamlRequestParam) ParseLogoutRequest() error {
 	return nil
 }
 
-func (s *SamlRequestParam) CheckSignature(idp *IdentityProvider) error {
+func (s *SamlRequestParam) CheckSignature(idp *saml.IdentityProvider) error {
 	if s.Method == "GET" {
 		if s.SigAlg != "" && s.Signature != "" {
 			sigvalue, err := base64.StdEncoding.DecodeString(s.Signature)

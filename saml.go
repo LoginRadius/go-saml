@@ -1,5 +1,7 @@
 package saml
 
+import lib "github.com/LoginRadius/go-saml/internal"
+
 const (
 	NameIdFormatPersistent      = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
 	NameIdFormatTransient       = "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
@@ -54,7 +56,7 @@ type IdentityProvider struct {
 	idpPrivateKey        interface{}
 	x509IdpCertificate   string
 	x509SpCertificate    string
-	samlRequestParam     *SamlRequestParam
+	samlRequestParam     *lib.SamlRequestParam
 }
 
 type MetadataBinding struct {
@@ -65,4 +67,11 @@ type MetadataBinding struct {
 type Reject struct {
 	Error  error
 	Reason string
+}
+
+type AuthReq struct {
+	ID           string
+	ForceAuthn   string
+	IsPassive    string
+	ProviderName string
 }
