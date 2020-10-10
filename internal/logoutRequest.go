@@ -155,15 +155,15 @@ func (r *LogoutRequest) SignedXml(idpPrivateKey *rsa.PrivateKey) (string, error)
 	return signedXml, nil
 }
 
-func (a *LogoutRequest) Validate() error {
-	if a.ID == "" {
+func (r *LogoutRequest) Validate() error {
+	if r.ID == "" {
 		return fmt.Errorf("request not contain the id")
 	}
-	/*if a.IssueInstant.Add(MaxIssueDelay).Before(time.Now()) {
-		return fmt.Errorf("request expired at %s", a.IssueInstant.Add(MaxIssueDelay))
+	/*if r.IssueInstant.Add(MaxIssueDelay).Before(time.Now()) {
+		return fmt.Errorf("request expired at %s", r.IssueInstant.Add(MaxIssueDelay))
 	}*/
-	if a.Version != "2.0" {
-		return fmt.Errorf("expected SAML request version 2.0 got %v", a.Version)
+	if r.Version != "2.0" {
+		return fmt.Errorf("expected SAML request version 2.0 got %v", r.Version)
 	}
 	return nil
 }
