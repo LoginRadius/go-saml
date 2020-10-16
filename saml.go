@@ -18,7 +18,7 @@ const (
 // Supported signature algorithms for responses
 const (
 	SignatureAlgorithmRSASHA1   = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
-	SignatureAlgorithmRSASHA256 = "http://www.w3.org/2001/04/xmldsig-more#sha256"
+	SignatureAlgorithmRSASHA256 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
 )
 
 // Supported digest algorithms for responses
