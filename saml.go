@@ -55,6 +55,8 @@ type IdentityProvider struct {
 	x509IdpCertificate   string
 	x509SpCertificate    string
 	samlRequestParam     *SamlRequestParam
+	Organization         *Organization
+	ContactPerson        *[]ContactPerson
 }
 
 type MetadataBinding struct {
@@ -72,4 +74,17 @@ type AuthnReq struct {
 	ForceAuthn   string
 	IsPassive    string
 	ProviderName string
+}
+
+type Organization struct {
+	OrganizationName        string `xml:"OrganizationName"`
+	OrganizationDisplayName string `xml:"OrganizationDisplayName"`
+	OrganizationURL         string `xml:"OrganizationURL"`
+}
+
+type ContactPerson struct {
+	ContactType  string `xml:"contactType,attr"`
+	GivenName    string `xml:"GivenName"`
+	SurName      string `xml:"SurName"`
+	EmailAddress string `xml:"EmailAddress"`
 }
