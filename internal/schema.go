@@ -141,6 +141,8 @@ type IDPEntityDescriptor struct {
 	ASSERTION        string           `xml:"xmlns:assertion,attr"`
 	EntityId         string           `xml:"entityID,attr"`
 	IDPSSODescriptor IDPSSODescriptor `xml:"IDPSSODescriptor"`
+	Organization     *Organization    `xml:"Organization"`
+	ContactPerson    *[]ContactPerson `xml:"ContactPerson"`
 }
 
 type Extensions struct {
@@ -159,6 +161,19 @@ type IDPSSODescriptor struct {
 	SigningKeyDescriptor       KeyDescriptor
 	SingleSignOnService        []SingleSignOnService `xml:"SingleSignOnService"`
 	SingleLogoutService        []SingleLogoutService `xml:"SingleLogoutService"`
+}
+
+type Organization struct {
+	OrganizationName        string `xml:"OrganizationName"`
+	OrganizationDisplayName string `xml:"OrganizationDisplayName"`
+	OrganizationURL         string `xml:"OrganizationURL"`
+}
+
+type ContactPerson struct {
+	ContactType  string `xml:"contactType,attr"`
+	GivenName    string `xml:"GivenName"`
+	SurName      string `xml:"SurName"`
+	EmailAddress string `xml:"EmailAddress"`
 }
 
 type SPSSODescriptor struct {
@@ -208,17 +223,17 @@ type AssertionConsumerService struct {
 }
 
 type Response struct {
-	XMLName        xml.Name
-	SAMLP          string    `xml:"xmlns:samlp,attr"`
-	SAML           string    `xml:"xmlns:saml,attr"`
-	Destination    string    `xml:"Destination,attr"`
-	ID             string    `xml:"ID,attr"`
-	Version        string    `xml:"Version,attr"`
-	IssueInstant   string    `xml:"IssueInstant,attr"`
-	InResponseTo   string    `xml:"InResponseTo,attr,omitempty"`
-	Issuer         Issuer    `xml:"Issuer"`
-	Status         Status    `xml:"Status"`
-	Assertion      Assertion `xml:"Assertion"`
+	XMLName      xml.Name
+	SAMLP        string    `xml:"xmlns:samlp,attr"`
+	SAML         string    `xml:"xmlns:saml,attr"`
+	Destination  string    `xml:"Destination,attr"`
+	ID           string    `xml:"ID,attr"`
+	Version      string    `xml:"Version,attr"`
+	IssueInstant string    `xml:"IssueInstant,attr"`
+	InResponseTo string    `xml:"InResponseTo,attr,omitempty"`
+	Issuer       Issuer    `xml:"Issuer"`
+	Status       Status    `xml:"Status"`
+	Assertion    Assertion `xml:"Assertion"`
 }
 
 type Assertion struct {

@@ -109,6 +109,32 @@ func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
 			})
 		}
 	}
+
+	// Append `Organization` information to metadata only if present
+	if idp.Organization != nil {
+		metadata.Organization = &lib.Organization{
+			OrganizationDisplayName: idp.Organization.OrganizationDisplayName,
+			OrganizationName:        idp.Organization.OrganizationName,
+			OrganizationURL:         idp.Organization.OrganizationURL,
+		}
+	}
+
+	// Only add the contact information if `ContactPerson` struct is present and
+	// the array contains atleast one element
+	if idp.ContactPerson != nil && len(*idp.ContactPerson) > 0 {
+		contactPersons := []lib.ContactPerson{}
+		// Create an array of `ContactPerson` by struct transformation
+		for _, person := range *idp.ContactPerson {
+			contactPersons = append(contactPersons, lib.ContactPerson{
+				ContactType:  person.ContactType,
+				EmailAddress: person.EmailAddress,
+				GivenName:    person.GivenName,
+				SurName:      person.SurName,
+			})
+		}
+		metadata.ContactPerson = &contactPersons
+	}
+
 	b, err := xml.MarshalIndent(metadata, "", "    ")
 	if err != nil {
 		return "", &Reject{err, "XML_ENCODE_ERROR"}
@@ -162,6 +188,31 @@ func (idp *IdentityProvider) AddAttribute(name string, value string, format stri
 
 func (idp *IdentityProvider) AddSingleSignOnService(service MetadataBinding) {
 	idp.SingleSignOnService = append(idp.SingleSignOnService, service)
+}
+
+func (idp *IdentityProvider) AddOrganization(organization Organization) {
+	idp.Organization = &organization
+}
+
+func (idp *IdentityProvider) AddContactPerson(contactPerson ContactPerson) {
+	if idp.ContactPerson != nil {
+		contactPersons := *idp.ContactPerson
+		updatedContactPersons := append(contactPersons, contactPerson)
+		idp.ContactPerson = &updatedContactPersons
+	} else {
+		persons := []ContactPerson{contactPerson}
+		idp.ContactPerson = &persons
+	}
+}
+
+func (idp *IdentityProvider) AddContactPersons(contactPersons ...ContactPerson) {
+	if idp.ContactPerson != nil && len(*idp.ContactPerson) > 0 {
+		previousContactPersons := idp.ContactPerson
+		updatedContactPersons := append(*previousContactPersons, contactPersons...)
+		idp.ContactPerson = &updatedContactPersons
+	} else {
+		idp.ContactPerson = &contactPersons
+	}
 }
 
 func (idp *IdentityProvider) AddSingleSignOutService(service MetadataBinding) {
