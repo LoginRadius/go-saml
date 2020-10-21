@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/LoginRadius/go-saml/internal"
 	lib "github.com/LoginRadius/go-saml/internal"
 	"github.com/LoginRadius/go-saml/templates"
 	"github.com/LoginRadius/go-saml/util"
@@ -113,7 +112,7 @@ func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
 
 	// Append `Organization` information to metadata only if present
 	if idp.Organization != nil {
-		metadata.Organization = &internal.Organization{
+		metadata.Organization = &lib.Organization{
 			OrganizationDisplayName: idp.Organization.OrganizationDisplayName,
 			OrganizationName:        idp.Organization.OrganizationName,
 			OrganizationURL:         idp.Organization.OrganizationURL,
@@ -123,10 +122,10 @@ func (idp *IdentityProvider) MetaDataResponse() (string, *Reject) {
 	// Only add the contact information if `ContactPerson` struct is present and
 	// the array contains atleast one element
 	if idp.ContactPerson != nil && len(*idp.ContactPerson) > 0 {
-		contactPersons := []internal.ContactPerson{}
+		contactPersons := []lib.ContactPerson{}
 		// Create an array of `ContactPerson` by struct transformation
 		for _, person := range *idp.ContactPerson {
-			contactPersons = append(contactPersons, internal.ContactPerson{
+			contactPersons = append(contactPersons, lib.ContactPerson{
 				ContactType:  person.ContactType,
 				EmailAddress: person.EmailAddress,
 				GivenName:    person.GivenName,
