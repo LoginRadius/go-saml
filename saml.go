@@ -77,14 +77,14 @@ type AuthnReq struct {
 }
 
 type Organization struct {
-	OrganizationName        string `xml:"OrganizationName"`
-	OrganizationDisplayName string `xml:"OrganizationDisplayName"`
-	OrganizationURL         string `xml:"OrganizationURL"`
+	OrganizationName        string
+	OrganizationDisplayName string
+	OrganizationURL         string
 }
 
 type ContactPerson struct {
-	ContactType  string `xml:"contactType,attr"`
-	GivenName    string `xml:"GivenName"`
-	SurName      string `xml:"SurName"`
-	EmailAddress string `xml:"EmailAddress"`
+	ContactType  string
+	GivenName    string
+	SurName      string
+	EmailAddress string
 }
